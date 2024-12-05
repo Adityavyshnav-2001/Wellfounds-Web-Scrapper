@@ -5,9 +5,8 @@ The Job Scraper Application combines a FastAPI backend and a React frontend to c
 
 ## Screenshots
 <img width="1440" alt="Screenshot 2024-12-06 at 2 00 54 AM" src="https://github.com/user-attachments/assets/57db5b67-8e22-43b5-b580-872b9c1918eb">
-
-
-
+<img width="1440" alt="Screenshot 2024-12-06 at 2 00 41 AM" src="https://github.com/user-attachments/assets/6fd2f6bb-701b-45b2-88bd-192532ab2cc6">
+<img width="1440" alt="Screenshot 2024-12-06 at 2 00 32 AM" src="https://github.com/user-attachments/assets/d32f67f1-12f9-4071-8993-cde81dd75116">
 
 ## Features
 
