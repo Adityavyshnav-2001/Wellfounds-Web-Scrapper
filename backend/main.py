@@ -12,6 +12,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 app = FastAPI()
 
+executor = ThreadPoolExecutor(max_workers=5)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,6 +28,10 @@ class JobRequest(BaseModel):
 @app.post("/scrape-jobs/")
 async def scrape_jobs(request: JobRequest):
     keyword = request.keyword.lower()
+    data = await run_in_threadpool(lamda:scraper_func(leyword))
+    return data
+
+def scraper_func(keyword:str):
     google_search_url = f"https://www.google.com/search?q={keyword}+site:wellfound.com"
 
     chrome_options = Options()
@@ -74,6 +80,3 @@ async def scrape_jobs(request: JobRequest):
     finally:
         driver.quit()
 
-@app.get("/")
-async def home():
-    return {"message": "Welcome to the Job Scraper API"}
