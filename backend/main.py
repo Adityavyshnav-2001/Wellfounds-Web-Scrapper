@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -9,6 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from concurrent.futures import ThreadPoolExecutor
+from fastapi.concurrency import run_in_threadpool
 
 app = FastAPI()
 
@@ -25,13 +27,7 @@ app.add_middleware(
 class JobRequest(BaseModel):
     keyword: str
 
-@app.post("/scrape-jobs/")
-async def scrape_jobs(request: JobRequest):
-    keyword = request.keyword.lower()
-    data = await run_in_threadpool(lamda:scraper_func(leyword))
-    return data
-
-def scraper_func(keyword:str):
+def scraper_func(keyword: str):
     google_search_url = f"https://www.google.com/search?q={keyword}+site:wellfound.com"
 
     chrome_options = Options()
@@ -50,10 +46,7 @@ def scraper_func(keyword:str):
                 break
 
         if not loaded:
-            return JSONResponse(
-                content={"error": "No Wellfound links found in the search results."},
-                status_code=404,
-            )
+            return {"error": "No Wellfound links found in the search results."}
 
         wait = WebDriverWait(driver, 10)
         elements = wait.until(
@@ -73,10 +66,13 @@ def scraper_func(keyword:str):
         return {"jobs": job_data}
 
     except Exception as e:
-        return JSONResponse(
-            content={"error": f"An error occurred: {str(e)}"},
-            status_code=500,
-        )
+        return {"error": f"An error occurred: {str(e)}"}
+
     finally:
         driver.quit()
 
+@app.post("/scrape-jobs/")
+async def scrape_jobs(request: JobRequest):
+    keyword = request.keyword.lower()
+    data = await run_in_threadpool(lambda: scraper_func(keyword))
+    return data

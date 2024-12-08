@@ -7,6 +7,9 @@ const App = () => {
 	const [jobs, setJobs] = useState([]);
 	const [error, setError] = useState("");
 	const [darkMode, setDarkMode] = useState(false);
+	const [message, setMessage] = useState("");
+	const [responseMessage, setResponseMessage] = useState("");
+	const [messageSending, setMessageSending] = useState(false);
 
 	useEffect(() => {
 		if (darkMode) {
@@ -39,6 +42,36 @@ const App = () => {
 			setJobs(data.jobs || {});
 		} catch (err) {
 			setError(err.message || "Something went wrong!");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleSendMessage = async () => {
+		setLoading(true);
+		setError("");
+		setResponseMessage("");
+		setMessageSending(false);
+
+		try {
+			const response = await fetch("http://127.0.0.1:8001/send-message/", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ message }),
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to initiate message sending");
+			}
+
+			const data = await response.json();
+			setResponseMessage(data.status);
+			setMessageSending(true);
+			setMessage("");
+		} catch (err) {
+			setError(err.message || "Failed to send message");
 		} finally {
 			setLoading(false);
 		}
@@ -140,61 +173,80 @@ const App = () => {
 				{error && <p className="text-red-500 text-center mb-6">{error}</p>}
 				{Object.keys(jobs).length > 0 && (
 					<div
-						className={`overflow-hidden rounded-lg ${
-							darkMode ? "bg-gray-700" : "bg-white"
-						} shadow`}
+						className={`mb-6 p-4 rounded-lg ${
+							darkMode ? "bg-gray-700" : "bg-gray-100"
+						}`}
 					>
-						<table className="w-full border-collapse">
-							<thead>
-								<tr
-									className={
-										darkMode
-											? "bg-gray-800 text-gray-200"
-											: "bg-gray-50 text-gray-700"
-									}
-								>
-									<th className="p-3 text-left font-semibold">Company</th>
-									<th className="p-3 text-left font-semibold">Job Title</th>
-								</tr>
-							</thead>
-							<tbody>
-								{Object.entries(jobs).map(([company, jobTitle], index) => (
-									<tr
-										key={index}
-										className={`${
-											index % 2 === 0
-												? darkMode
-													? "bg-gray-800"
-													: "bg-gray-50"
-												: darkMode
-												? "bg-gray-700"
-												: "bg-white"
-										} transition-colors duration-300`}
-									>
-										<td
-											className={`p-3 ${
-												darkMode
-													? "text-gray-300 border-gray-600"
-													: "text-gray-800 border-gray-200"
-											}`}
-										>
-											{company}
-										</td>
-										<td
-											className={`p-3 ${
-												darkMode
-													? "text-gray-300 border-gray-600"
-													: "text-gray-800 border-gray-200"
-											}`}
-										>
-											{jobTitle}
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
+						<h2
+							className={`text-xl font-semibold mb-2 ${
+								darkMode ? "text-white" : "text-gray-800"
+							}`}
+						>
+							Search Results
+						</h2>
+						<p className={`${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+							Job results will be displayed here when the API is ready.
+						</p>
 					</div>
 				)}
+				<div className="mt-8">
+					<h2
+						className={`text-2xl font-bold mb-4 ${
+							darkMode ? "text-white" : "text-gray-800"
+						}`}
+					>
+						Task 2
+					</h2>
+					<div className="flex gap-4">
+						<input
+							type="text"
+							className={`flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+								darkMode
+									? "bg-gray-700 text-white border-gray-600 focus:ring-blue-500"
+									: "bg-white text-gray-800 border-gray-300 focus:ring-blue-500"
+							}`}
+							placeholder="Enter your message"
+							value={message}
+							onChange={(e) => setMessage(e.target.value)}
+						/>
+						<button
+							className={`px-6 py-2 rounded-lg text-white flex items-center justify-center transition-colors duration-300 ${
+								loading || messageSending
+									? "bg-gray-400"
+									: darkMode
+									? "bg-green-600 hover:bg-green-700"
+									: "bg-green-500 hover:bg-green-600"
+							}`}
+							onClick={handleSendMessage}
+							disabled={loading || messageSending}
+						>
+							{loading
+								? "Sending..."
+								: messageSending
+								? "Message Sending..."
+								: "Submit"}
+						</button>
+					</div>
+					{responseMessage && (
+						<p
+							className={`mt-2 ${
+								darkMode ? "text-green-400" : "text-green-600"
+							}`}
+						>
+							{responseMessage}
+						</p>
+					)}
+					{messageSending && (
+						<p
+							className={`mt-2 ${
+								darkMode ? "text-yellow-400" : "text-yellow-600"
+							}`}
+						>
+							Message is being sent in the background. This may take a few
+							minutes.
+						</p>
+					)}
+				</div>
 			</div>
 		</div>
 	);
